@@ -1,5 +1,7 @@
 package org.example.transformers
 
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions.{col, current_timestamp, lit, lpad, month, to_date}
 import org.apache.spark.sql.types.Decimal
 import org.apache.spark.sql.{Row, SparkSession}
 import org.example.Schemas.covidDataSchemas.countrySchema
@@ -17,7 +19,9 @@ class RDD(spark: SparkSession) extends Serializable {
     // Reading data from a given String
     val data: Array[String] = "I am Soumitra Banerjee. I love Distributed Computing and I love Spark. I work at American Express as Data Engineer II.".
       split(" ")
-
+    val df = spark.range(5).toDF().withColumn("date", current_timestamp())
+    df.withColumn("date_format", to_date(col("time"), "MM-dd-yyyy")).withColumn("month", lpad(lit(month(col("date_format"))), 2, "0")).show
+Window
     val rdd_data = spark.sparkContext.parallelize(data, 8) // because I have 8 cores CPU locally
     rdd_data.distinct().count()
     rdd_data.foreach(println)
@@ -41,6 +45,8 @@ class RDD(spark: SparkSession) extends Serializable {
     rdd_1.mapPartitions(part => Iterator[Int](2))
     rdd_1.reduce(reduceWordLength)
 
+    rdd_1.flatMap(x => x.split(" ")).map(x => (x,1)).reduceByKey((x,y) => x+y)
+
 
     // Given a document and a lookup data, if the total number of word match in the document is more than 30% than it's a valid document, else invalid
     val dataRDD = spark.sparkContext.wholeTextFiles("/Users/soumitrabanerjee/Desktop/SparkLearnings/data/csv/country_wise_latest.csv", 8)
@@ -48,6 +54,7 @@ class RDD(spark: SparkSession) extends Serializable {
     val lookupRDD = spark.sparkContext.parallelize(lookup_arr, 8)
     dataRDD.map(value => value.toString().split(","))
     lookupRDD.foreach(startsWithI)
+
 
 //    val collected_data = rdd_2.collect()
 //    val splitted_arr_length: Double = collected_data(0).toString.split(",").length

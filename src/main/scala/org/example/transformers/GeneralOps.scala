@@ -1,7 +1,8 @@
 package org.example
 
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
-import org.apache.spark.sql.functions.{col, corr, desc, explode, expr, from_json, lit, monotonically_increasing_id, split, struct, to_json}
+import org.apache.spark.sql.functions.{col, corr, count, desc, explode, expr, from_json, lit, monotonically_increasing_id, split, struct, sum, to_json}
 import org.apache.spark.sql.types.StringType
 import org.example.Schemas.jsonSchema.myStructSchema
 import org.example.supportiveClasses.SparkUDF
@@ -19,7 +20,7 @@ class GeneralOps(spark: SparkSession) {
       sort(sortExpr).
       filter(exp)
 
-    deathsDF.show()
+    deathsDF.withColumn("temp", sum("`1 week change`").over(Window.partitionBy("Country/Region")))
     deathsDF.sample(false, 0.5, 5)
 
     val complexStruct = indiaDF.select(col("`Country/Region`"), col("Deaths"), struct(col("Deaths"), col("Country/Region")).alias("complexCovid"))

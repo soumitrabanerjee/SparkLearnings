@@ -20,10 +20,13 @@ class Aggregations(spark: SparkSession) {
     windowFunc(df)
     rollUp(df)
     cubeFunc(df)
+    df.dropDuplicates("col_name")
   }
+
 
   def cubeFunc(df: Dataset[Row]): Unit={
     println("<<< CUBE FUNC >>>")
+    df.write.bucketBy(10, "id").sortBy("id").format("parquet").save("")
     val newDF = df.
       cube(col("`WHO Region`"), col("`Recovered / 100 Cases`")).
       agg(sum("`Recovered`")).
@@ -115,6 +118,7 @@ class Aggregations(spark: SparkSession) {
 
     println("<<< First DF >>>")
     df_all.select(firstHalfColumns: _*).show(false)
+    df_all.select("").collect.map(x => x)
 
     println("<<< Right DF >>>")
     df_all.select(secondHalfColumns: _*).show(false)
